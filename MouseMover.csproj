@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- Must match the runtime Flow Launcher runs on (FL 2.1.x => .NET 9, WindowsDesktop). -->
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <!-- WPF is required for the ISettingProvider settings panel (CreateSettingPanel returns a Control). -->
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>MouseMover</AssemblyName>
+    <RootNamespace>MouseMover</RootNamespace>
+    <!-- Plugin loads into the FL process; copy our (few) deps but not the host SDK. -->
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The host already provides Flow.Launcher.Plugin.dll at runtime, so compile
+         against it but do NOT copy it into the plugin output (ExcludeAssets=runtime). -->
+    <PackageReference Include="Flow.Launcher.Plugin" Version="5.3.0">
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- Ship plugin.json and the icon next to the built DLL. -->
+  <ItemGroup>
+    <None Include="plugin.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Images\**\*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

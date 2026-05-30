@@ -1,0 +1,48 @@
+name: Publish Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths-ignore:
+      - '.github/workflows/*'
+      - '**/*.md'
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    # WPF settings panel => must build on Windows.
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Get version from plugin.json
+        id: version
+        uses: notiz-dev/github-action-json-property@release
+        with:
+          path: 'plugin.json'
+          prop_path: 'Version'
+
+      - name: Build
+        run: dotnet build MouseMover.csproj -c Release -o ./out
+
+      - name: Zip plugin
+        shell: pwsh
+        run: Compress-Archive -Path ./out/* -DestinationPath ./MouseMover.zip -Force
+
+      - name: Publish release
+        if: success()
+        uses: softprops/action-gh-release@v2
+        with:
+          files: 'MouseMover.zip'
+          tag_name: 'v${{ steps.version.outputs.prop }}'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
