@@ -6,7 +6,7 @@ repository.
 
 ## One-time setup
 
-1. **Create the GitHub repo** `zaingill45/MouseMoverFlowExtension` (public) and push
+1. **Create the GitHub repo** `ZainGill45/MouseMoverFlowExtension` (public) and push
    this project to the `main` branch (see [README](README.md) → *Build & deploy*).
    The repo must be **public** so jsdelivr can serve the icon and users can download
    releases.
@@ -44,7 +44,7 @@ new `v<version>` release. Just keep bumping `plugin.json` and pushing to `main`.
 You and your testers can install straight from the release without waiting for the store:
 
 ```
-pm install https://github.com/zaingill45/MouseMoverFlowExtension/releases/download/v1.0.0/MouseMover.zip
+pm install https://github.com/ZainGill45/MouseMoverFlowExtension/releases/download/v1.0.0/MouseMover.zip
 ```
 
 ## Notes / standards checklist
