@@ -46,7 +46,7 @@ kept resident**. That is the whole design:
 | `Images/icon.png` | Plugin icon (also served via jsdelivr for the store). |
 | `build.ps1` | Local build + deploy to the FL Plugins folder. |
 | `.github/workflows/Publish Release.yml` | CI: build on Windows, zip, GitHub release. |
-| `publish/MouseMover-<guid>.json` | Store manifest entry for the one-time PluginsManifest PR. |
+| `publish/Mouse Mover-<guid>.json` | Store manifest entry for the one-time PluginsManifest PR. Filename must be `${Name}-${uuid}.json` (with the space) — the manifest CI's `test_file_name_construct` checks it. |
 | `PUBLISHING.md` | Full release + store-submission process. |
 
 ## Hard constraints (don't break these)
@@ -96,7 +96,7 @@ pwsh ./build.ps1 -NoDeploy  # build only
   workflow (must run on `windows-latest` — WPF) builds, zips the output with
   `plugin.json` at the zip root as `MouseMover.zip`, and creates/updates a `v<version>`
   GitHub release.
-- First listing only: PR the `publish/MouseMover-<guid>.json` file into a fork of
+- First listing only: PR the `publish/Mouse Mover-<guid>.json` file into a fork of
   `Flow-Launcher/Flow.Launcher.PluginsManifest` (target the default branch `main`,
   `plugins/` folder). After approval, the manifest CI auto-updates the store from new
   releases — no further submissions.

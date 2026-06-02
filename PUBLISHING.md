@@ -30,8 +30,10 @@ After your **v1.0.0** release exists:
 
 1. Fork [`Flow.Launcher.PluginsManifest`](https://github.com/Flow-Launcher/Flow.Launcher.PluginsManifest)
    and switch to its default branch (`main`).
-2. Copy [`publish/MouseMover-fd5e5017-66f2-4d75-8911-f387ce788efd.json`](publish/MouseMover-fd5e5017-66f2-4d75-8911-f387ce788efd.json)
-   into that repo's `plugins/` directory (keep the `${name}-${uuid}.json` filename).
+2. Copy [`publish/Mouse Mover-fd5e5017-66f2-4d75-8911-f387ce788efd.json`](publish/Mouse%20Mover-fd5e5017-66f2-4d75-8911-f387ce788efd.json)
+   into that repo's `plugins/` directory (keep the `${Name}-${uuid}.json` filename —
+   the manifest CI's `test_file_name_construct` requires it to match `Name` exactly,
+   including the space in "Mouse Mover").
 3. Open a pull request. Once the Flow Launcher team approves it, the plugin appears
    in the in-app store and via `pm install Mouse Mover`.
 
