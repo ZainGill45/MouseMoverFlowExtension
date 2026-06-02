@@ -4,13 +4,13 @@ using Flow.Launcher.Plugin;
 
 namespace MouseMover;
 
-public class Main : IPlugin, ISettingProvider
+public class Main : IPlugin, ISettingProvider, IDisposable
 {
     private PluginInitContext _context = null!;
     private MouseMoverSettings _settings = null!;
 
-    private readonly Random _rng = new();
-    private System.Threading.Timer? _timer;
+    private readonly Random _random = new();
+    private Timer? _timer;
     private volatile bool _running;
     private int _gliding; // 0 = idle, 1 = a glide is in progress (overlap guard)
 
@@ -30,68 +30,76 @@ public class Main : IPlugin, ISettingProvider
         // A single toggle. All configuration is in the settings panel.
         if (_running)
         {
-            return new List<Result>
-            {
+            return
+            [
                 new()
                 {
-                    Title = "Disable mouse mover",
-                    SubTitle = $"Running — gliding within {_settings.Radius}px every {_settings.IntervalMs} ms. Select to stop and return control.",
+                    Title = "Disable Mouse Mover",
+                    SubTitle = $"Running gliding within {_settings.Radius}px every {_settings.IntervalMs} ms. Select to stop and return control.",
                     IcoPath = IconPath,
                     Score = 100,
                     Action = _ => { Stop(); return true; }
                 }
-            };
+            ];
         }
 
-        return new List<Result>
-        {
+        return
+        [
             new()
             {
-                Title = "Enable mouse mover",
-                SubTitle = $"Stopped — will glide within {_settings.Radius}px every {_settings.IntervalMs} ms. Select to start.",
+                Title = "Enable Mouse Mover",
+                SubTitle = $"Stopped will glide within {_settings.Radius}px every {_settings.IntervalMs} ms. Select to start.",
                 IcoPath = IconPath,
                 Score = 100,
                 Action = _ => { Start(); return true; }
             }
-        };
+        ];
     }
 
     // ---------------------------------------------------------------- engine
 
     private void Start()
     {
-        if (_running) return;
+        if (_running) 
+            return;
+            
         _running = true;
-        var period = Math.Max(MouseMoverSettings.MinInterval, _settings.IntervalMs);
-        _timer = new System.Threading.Timer(OnTick, null, 250, period);
-        _context.API.ShowMsg("Mouse Mover", "Enabled — cursor will move automatically.", IconPath);
+        int intervalMilliseconds = Math.Max(MouseMoverSettings.MinInterval, _settings.IntervalMs);
+        _timer = new Timer(OnTick, null, 250, intervalMilliseconds);
+        _context.API.ShowMsg("Mouse Mover", "Mouse Mover Enabled", IconPath);
     }
 
     private void Stop()
     {
-        if (!_running) return;
+        if (!_running) 
+            return;
+
         _running = false;
         _timer?.Dispose();
         _timer = null;
-        _context.API.ShowMsg("Mouse Mover", "Disabled — you have control again.", IconPath);
+        _context.API.ShowMsg("Mouse Mover", "Mouse Mover Disabled", IconPath);
     }
 
     private void OnTick(object? state)
     {
-        if (!_running) return;
-        // Skip this tick if a previous glide is still running.
-        if (Interlocked.CompareExchange(ref _gliding, 1, 0) != 0) return;
+        if (!_running) 
+            return;
+
+        if (Interlocked.CompareExchange(ref _gliding, 1, 0) != 0) 
+            return;
+
         try
         {
-            // Keep cadence in sync if the user changed the interval in settings.
-            var period = Math.Max(MouseMoverSettings.MinInterval, _settings.IntervalMs);
-            _timer?.Change(period, period);
+            int intervalMilliseconds = Math.Max(MouseMoverSettings.MinInterval, _settings.IntervalMs);
 
-            if (!GetCursorPos(out var start)) return;
+            _timer?.Change(intervalMilliseconds, intervalMilliseconds);
 
-            var (vx, vy, vw, vh) = VirtualScreen();
-            var target = PickTarget(start, vx, vy, vw, vh);
-            GlideTo(start, target);
+            if (!GetCursorPos(out POINT startPosition)) 
+                return;
+
+            (int virtualScreenX, int virtualScreenY, int virtualScreenWidth, int virtualScreenHeight) = GetVirtualScreenBounds();
+            POINT targetPosition = PickRandomTarget(startPosition, virtualScreenX, virtualScreenY, virtualScreenWidth, virtualScreenHeight);
+            GlideTo(startPosition, targetPosition);
         }
         finally
         {
@@ -99,61 +107,78 @@ public class Main : IPlugin, ISettingProvider
         }
     }
 
-    private POINT PickTarget(POINT from, int vx, int vy, int vw, int vh)
+    private POINT PickRandomTarget(POINT fromPosition, int virtualScreenX, int virtualScreenY, int virtualScreenWidth, int virtualScreenHeight)
     {
-        // Uniform point inside a disc of the configured radius.
-        var angle = _rng.NextDouble() * Math.PI * 2;
-        var dist = Math.Sqrt(_rng.NextDouble()) * _settings.Radius;
-        var tx = (int)Math.Round(from.X + Math.Cos(angle) * dist);
-        var ty = (int)Math.Round(from.Y + Math.Sin(angle) * dist);
-        // Clamp inside the full virtual desktop (all monitors).
-        tx = Math.Clamp(tx, vx, vx + vw - 1);
-        ty = Math.Clamp(ty, vy, vy + vh - 1);
-        return new POINT { X = tx, Y = ty };
+        double angle = _random.NextDouble() * Math.PI * 2;
+        double distance = Math.Sqrt(_random.NextDouble()) * _settings.Radius;
+
+        int targetX = (int)Math.Round(fromPosition.X + Math.Cos(angle) * distance);
+        int targetY = (int)Math.Round(fromPosition.Y + Math.Sin(angle) * distance);
+
+        targetX = Math.Clamp(targetX, virtualScreenX, virtualScreenX + virtualScreenWidth - 1);
+        targetY = Math.Clamp(targetY, virtualScreenY, virtualScreenY + virtualScreenHeight - 1);
+
+        return new POINT { X = targetX, Y = targetY };
     }
 
-    private void GlideTo(POINT from, POINT to)
+    private void GlideTo(POINT fromPosition, POINT toPosition)
     {
-        var glide = _settings.GlideMs;
-        var step = Math.Max(MouseMoverSettings.MinStep, _settings.StepMs);
+        int glideMilliseconds = _settings.GlideMs;
+        int stepMilliseconds = Math.Max(MouseMoverSettings.MinStep, _settings.StepMs);
 
-        if (glide <= 0)
+        if (glideMilliseconds <= 0)
         {
-            SetCursorPos(to.X, to.Y);
+            SetCursorPos(toPosition.X, toPosition.Y);
             return;
         }
 
-        var steps = Math.Max(1, glide / step);
-        for (var i = 1; i <= steps; i++)
+        int stepCount = Math.Max(1, glideMilliseconds / stepMilliseconds);
+
+        for (int stepIndex = 1; stepIndex <= stepCount; stepIndex++)
         {
-            if (!_running) return; // bail out instantly when disabled mid-glide
-            var t = (double)i / steps;
-            var e = EaseInOut(t);
-            var x = (int)Math.Round(from.X + (to.X - from.X) * e);
-            var y = (int)Math.Round(from.Y + (to.Y - from.Y) * e);
-            SetCursorPos(x, y);
-            Thread.Sleep(step);
+            if (!_running) 
+                return;
+
+            double progress = (double)stepIndex / stepCount;
+            double easedProgress = EaseInOut(progress);
+
+            int interpolatedX = (int)Math.Round(fromPosition.X + (toPosition.X - fromPosition.X) * easedProgress);
+            int interpolatedY = (int)Math.Round(fromPosition.Y + (toPosition.Y - fromPosition.Y) * easedProgress);
+
+            SetCursorPos(interpolatedX, interpolatedY);
+            Thread.Sleep(stepMilliseconds);
         }
     }
 
-    private static double EaseInOut(double t) =>
-        t < 0.5 ? 2 * t * t : 1 - Math.Pow(-2 * t + 2, 2) / 2;
+    private static double EaseInOut(double progress) => progress < 0.5 ? 2 * progress * progress : 1 - Math.Pow(-2 * progress + 2, 2) / 2;
+
+    public void Dispose()
+    {
+        // Released on plugin unload/reload so a reload can't orphan a running timer
+        // (which would keep moving the cursor with no UI left to stop it).
+        _running = false;
+        _timer?.Dispose();
+        _timer = null;
+    }
 
     // ---------------------------------------------------------------- Win32
 
-    private static (int x, int y, int w, int h) VirtualScreen()
+    private static (int x, int y, int width, int height) GetVirtualScreenBounds()
     {
         int x = GetSystemMetrics(SM_XVIRTUALSCREEN);
         int y = GetSystemMetrics(SM_YVIRTUALSCREEN);
-        int w = GetSystemMetrics(SM_CXVIRTUALSCREEN);
-        int h = GetSystemMetrics(SM_CYVIRTUALSCREEN);
-        if (w <= 0 || h <= 0) // fallback to primary monitor
+        int width = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+        int height = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+
+        if (width <= 0 || height <= 0)
         {
-            x = 0; y = 0;
-            w = GetSystemMetrics(SM_CXSCREEN);
-            h = GetSystemMetrics(SM_CYSCREEN);
+            x = 0;
+            y = 0;
+            width = GetSystemMetrics(SM_CXSCREEN);
+            height = GetSystemMetrics(SM_CYSCREEN);
         }
-        return (x, y, w, h);
+        
+        return (x, y, width, height);
     }
 
     private const int SM_CXSCREEN = 0;

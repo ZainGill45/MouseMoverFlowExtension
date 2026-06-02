@@ -54,7 +54,9 @@ public class MouseMoverSettings : INotifyPropertyChanged
 
     private void Set(ref int field, int value, [CallerMemberName] string? name = null)
     {
-        if (field == value) return;
+        if (field == value) 
+            return;
+            
         field = value;
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }

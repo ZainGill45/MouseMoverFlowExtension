@@ -32,6 +32,8 @@ kept resident**. That is the whole design:
   `GlideMs` in `StepMs` steps (`SetCursorPos`). `GlideMs == 0` => instant jump.
 - An `Interlocked` guard (`_gliding`) skips a tick if the previous glide is still
   running; a running glide bails immediately when disabled.
+- `Main` implements `IDisposable` (`Dispose` stops/disposes the timer) so a plugin
+  reload can't orphan a running timer that would keep moving the cursor.
 
 ## File map
 
@@ -107,5 +109,9 @@ pwsh ./build.ps1 -NoDeploy  # build only
   toggle. New tunables belong in the **settings panel**, not as query subcommands.
 - Mirror the existing comment density and naming; engine helpers stay private in
   `Main.cs`, configuration in `Settings.cs`.
+- **No `var`** — declare locals with explicit types. **No abbreviations** in names;
+  use full descriptive identifiers (e.g. `intervalMilliseconds`, `virtualScreenWidth`,
+  not `period`/`vw`). Win32 interop names (`POINT.X`, `SM_*`, P/Invoke signatures)
+  keep their conventional spellings.
 - Don't commit `.claude/settings.local.json` (personal, gitignored); the shared
   `.claude/settings.json` allowlist is committed.

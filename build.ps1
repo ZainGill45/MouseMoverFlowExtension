@@ -16,7 +16,9 @@ if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
 
 if ($NoDeploy) { return }
 
-$dest = "$env:APPDATA\FlowLauncher\Plugins\MouseMover-1.0.0"
+# Folder name tracks the manifest version so deploys never land in a stale folder.
+$version = (Get-Content (Join-Path $root 'plugin.json') -Raw | ConvertFrom-Json).Version
+$dest = "$env:APPDATA\FlowLauncher\Plugins\MouseMover-$version"
 if (Test-Path $dest) { Remove-Item -Recurse -Force $dest }
 New-Item -ItemType Directory -Force $dest | Out-Null
 Copy-Item "$out\*" $dest -Recurse -Force
