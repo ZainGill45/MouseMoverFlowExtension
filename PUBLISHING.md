@@ -29,7 +29,7 @@ repository.
 After your **v1.0.0** release exists:
 
 1. Fork [`Flow.Launcher.PluginsManifest`](https://github.com/Flow-Launcher/Flow.Launcher.PluginsManifest)
-   and switch to its default branch (`plugin_api_v2`).
+   and switch to its default branch (`main`).
 2. Copy [`publish/MouseMover-fd5e5017-66f2-4d75-8911-f387ce788efd.json`](publish/MouseMover-fd5e5017-66f2-4d75-8911-f387ce788efd.json)
    into that repo's `plugins/` directory (keep the `${name}-${uuid}.json` filename).
 3. Open a pull request. Once the Flow Launcher team approves it, the plugin appears

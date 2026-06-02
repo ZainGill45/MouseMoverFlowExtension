@@ -97,9 +97,9 @@ pwsh ./build.ps1 -NoDeploy  # build only
   `plugin.json` at the zip root as `MouseMover.zip`, and creates/updates a `v<version>`
   GitHub release.
 - First listing only: PR the `publish/MouseMover-<guid>.json` file into a fork of
-  `Flow-Launcher/Flow.Launcher.PluginsManifest` (branch `plugin_api_v2`, `plugins/`
-  folder). After approval, the manifest CI auto-updates the store from new releases —
-  no further submissions.
+  `Flow-Launcher/Flow.Launcher.PluginsManifest` (target the default branch `main`,
+  `plugins/` folder). After approval, the manifest CI auto-updates the store from new
+  releases — no further submissions.
 - Manifest `IcoPath` uses jsdelivr `@main`, which caches hard. If the icon changes,
   reference a tagged ref (`@v1.0.x`) instead.
 
