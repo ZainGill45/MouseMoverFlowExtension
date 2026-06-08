@@ -4,7 +4,7 @@
   "Name": "Mouse Mover",
   "Description": "Toggle randomized, smooth automatic mouse movement (anti-idle). Enable to keep the cursor gliding to random nearby points; disable to return control.",
   "Author": "ZainGill45",
-  "Version": "1.0.0",
+  "Version": "1.1.0",
   "Language": "csharp",
   "Website": "https://github.com/ZainGill45/MouseMoverFlowExtension",
   "IcoPath": "Images\\icon.png",

@@ -21,6 +21,8 @@ public class MouseMoverSettings : INotifyPropertyChanged
     private int _radius = 250;
     private int _glideMs = 600;
     private int _stepMs = 10;
+    private bool _autoDisableOnUserMouseInput = true;
+    private bool _restrictMovementToCurrentMonitor = true;
 
     /// <summary>Milliseconds between picking new random targets.</summary>
     public int IntervalMs
@@ -50,9 +52,32 @@ public class MouseMoverSettings : INotifyPropertyChanged
         set => Set(ref _stepMs, Math.Clamp(value, MinStep, MaxStep));
     }
 
+    /// <summary>Stop the current run when physical mouse input is detected.</summary>
+    public bool AutoDisableOnUserMouseInput
+    {
+        get => _autoDisableOnUserMouseInput;
+        set => Set(ref _autoDisableOnUserMouseInput, value);
+    }
+
+    /// <summary>Keep random targets inside the monitor containing the cursor.</summary>
+    public bool RestrictMovementToCurrentMonitor
+    {
+        get => _restrictMovementToCurrentMonitor;
+        set => Set(ref _restrictMovementToCurrentMonitor, value);
+    }
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     private void Set(ref int field, int value, [CallerMemberName] string? name = null)
+    {
+        if (field == value) 
+            return;
+            
+        field = value;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+    }
+
+    private void Set(ref bool field, bool value, [CallerMemberName] string? name = null)
     {
         if (field == value) 
             return;
